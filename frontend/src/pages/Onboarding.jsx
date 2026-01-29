@@ -1,0 +1,114 @@
+import React, { useState } from "react";
+import PremiumButton from "../components/PremiumBtn";
+import { useNavigate } from "react-router-dom"; 
+
+export default function OnboardingName({ setUser }) {
+  const [name, setName] = useState("");
+  const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false); // Controls the popup
+
+  const handleProceed = () => {
+    if (name.trim()) {
+      // 1. Saving to state so the Greeting Toast can use it
+      setUser({ username: name.trim() });
+      // When user clicks "Proceed", show the Privacy Modal
+      setShowModal(true);
+      
+      // 2. Persist it in localStorage 
+      localStorage.setItem("userName", name.trim());
+      
+    }
+  };
+
+
+  //  When user clicks "Agree & Continue" inside the Modal
+  const handleFinalAgreement = () => {
+    setUser({ username: name.trim() });
+    localStorage.setItem("userName", name.trim());
+    navigate("/analyze");
+  };
+
+  return (
+    <div className="min-h-screen bg-white flex justify-center font-sans overflow-hidden pt-5 ">
+      <div className="w-full max-w-md bg-white flex flex-col  relative">
+        
+        {/* Header Section */}
+        <h1 className="text-[24px] font-['Sora'] text-start font-semibold text-[#000000] leading-tight">
+          Hi, I’m Clear Clause
+        </h1>
+        <p className="text-[#333333] text-start font-['Sora'] text-[16px] mt-4 leading-relaxed font-normal ">
+          Your personal document scanner. <br />
+          I help you spot unclear, risky, or <br />
+          potentially unfair terms before you sign.
+        </p>
+
+        {/* Input Section */}
+        <div className="mt-16">
+          <label className="text-[16px] text-start font-['Sora'] font-normal text-gray-800 block mb-2">
+            What should I call you ?
+          </label>
+          <input
+            type="text"
+            autoFocus
+            placeholder="Maxwell"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full border border-[#D8DADC] font-['Sora'] rounded-2xl py-5 px-6 text-[#000000] focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-[#00000080] text-[16px]"
+          />
+        </div>
+
+        {/* Dynamic Button Section */}
+        <div className="mt-10 h-20"> 
+          {name.trim().length > 0 && (
+            <PremiumButton 
+                text="Proceed" 
+                onClick={handleProceed} 
+            />
+          )}
+        </div>
+
+
+        {/* ACKNOWLEDGEMENT MODAL */}
+        {showModal && (
+          <div className=" fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-300">
+            <div className="bg-white text-start pb-20 pt-10 w-full max-w-md rounded-t-[20px] sm:rounded-[20px] p-8 shadow-2xl animate-in slide-in-from-bottom-10 duration-500 relative">
+              
+              {/* Close Button */}
+              <button 
+                onClick={() => setShowModal(false)}
+                className="absolute top-6 left-8 text-black hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <div className="mt-10">
+                <h2 className="text-[18px] leading-[20px] font-semibold text-black mb-2 font-['Sora'] ">Data Privacy:</h2>
+                <p className="text-[14px]/[20px] leading-[20px] text-[#000000] font-['Sora'] mb-6 font-normal">
+                  In case you’re wondering whether Clear Clause stores your documents — no, we don’t. 
+                  Files you upload are processed securely and are not saved, shared, or used for training purposes. <br />
+                  Once analysis is complete, your document is discarded automatically. 
+                  Your data stays yours. Always.
+                </p>
+
+                <h2 className="text-[18px] leading-[20px] font-semibold text-black font-['Sora'] mb-2">Updates to These Terms:</h2>
+                <p className="text-[14px]/[20px] text-[#000000] font-['Sora'] mb-10 font-normal leading-[20px]">
+                  We may update these terms to improve clarity, security, or functionality. 
+                  Any changes will be reflected within the app before taking effect. 
+                  Continued use of Clear Clause means you accept the updated terms. 
+                  Transparency is part of the deal.
+                </p>
+
+                <PremiumButton 
+                  text="Agree & Continue" 
+                  onClick={handleFinalAgreement} 
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
