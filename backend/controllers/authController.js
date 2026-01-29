@@ -68,3 +68,22 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+exports.getProfile = async (req, res) => {
+    try {
+        const user = await pool.query(
+            'SELECT username FROM users WHERE id = $1',
+            [req.userId]
+        );
+
+        if (user.rows.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({ username: user.rows[0].username });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
