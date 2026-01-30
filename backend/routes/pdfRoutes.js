@@ -44,7 +44,7 @@ router.post("/upload", upload.single("pdf"), async (req, res) => {
         error: "No readable text found. Scanned PDFs not supported."
       });
     }
-    if (!extractedText || extractedText.trim().length < 50) {
+    if (!fullText || fullText.trim().length < 50) {
       return res.status(422).json({ 
         error: "This file contains no readable text. Please ensure it is a clear document or image." 
       });
@@ -80,6 +80,7 @@ for (const chunk of chunks) {
     explanation: analysis.reason
   });
 }
+await new Promise(resolve => setTimeout(resolve, 1500));
 
 
     res.json({ analyzedChunks });
