@@ -4,8 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Set it as the default for everything */
 @layer base {
+
+  #root {
+    margin: 0 !important ;
+    padding: 0 !important;
+  }
   body {
     font-family: 'Sora', sans-serif;
     margin: 0;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import PremiumButton from "./PremiumBtn";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function Login() {
       const res = await axios.post("http://localhost:5000/api/auth/login", formData);
 
       localStorage.setItem("token", res.data.token);
-      navigate("/home"); 
+      navigate("/Onboarding"); 
     }  catch (err) {
         console.error("login error:", err); 
         setError(err.response?.data?.message || "Something went wrong");
@@ -40,13 +41,18 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      <div className="w-full flex items-center justify-center px-8">
+    <div className="flex pt-10">
+      <div className="w-full flex items-center justify-center px-4">
         <div className="w-full max-w-md ">
 
-          <p className="text-[#4D4D4D] mb-8 text-center bold-400 text-lg">
+          <p className="text-[#000000] text-start mb-2 text-center font-medium text-[20px] font-['Sora']">
             Log in to your account
           </p>
+          <p
+           className="text-[#4D4D4D] text-[#8E8E8E] text-start mb-8 font-['Sora']  mb-8 font-normal text-center text-lg">
+            Securely create your account to start scanning contracts
+          </p>
+
 
           {error && (
             <div className="mb-6 rounded-lg bg-red-100 border border-red-300 px-4 py-3 text-sm text-red-600">
@@ -57,7 +63,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* EMAIL */}
             <div className="flex flex-col items-start gap-[12px]">
-              <label className="text-sm font-medium text-[#4D4D4D]">Email address</label>
+              <label className="text-[16px] font-medium text-[#4D4D4D] font-['Sora']">Email address</label>
               <input
                 type="email"
                 name="email"
@@ -71,7 +77,7 @@ export default function Login() {
 
             {/* PASSWORD */}
             <div className="flex flex-col items-start gap-[12px]">
-              <label className="text-sm font-medium text-[#4D4D4D]">Password</label>
+              <label className="text-[16px] font-medium text-[#4D4D4D] font-['Sora']">Password</label>
               <input
                 type="password"
                 name="password"
@@ -92,35 +98,32 @@ export default function Login() {
                 onChange={handleChange}
                 className="mt-1"
               />
-              <p className="text-sm text-[#4D4D4D]">
+              <p className="text-sm text-[#4D4D4D] font-['Sora'] mb-10">
                 Remember me
               </p>
             </div>
 
-            {/* Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 rounded-xl bg-[#0057B8] text-white font-medium hover:opacity-90 transition disabled:opacity-50 mt-4"
-            >
-              {loading ? "Logging in..." : "Log in"}
-            </button>
+
+             <PremiumButton 
+                type="submit"
+                text={loading ? "Logging in..." : "Log in"}
+                disabled={loading}
+                // onClick={() => navigate("/register")}
+            />
+          
           </form>
 
           {/* Sign up */}
-          <p className="text-center text-sm text-[#4D4D4D] mt-6">
+          <p className="text-center font-['Sora'] text-sm text-[#4D4D4D] mt-8">
             Don’t have an account?{" "}
             <span
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/register")}
               className="text-[#D4AF37] cursor-pointer hover:underline"
             >
               Register
             </span>
           </p>
 
-          <p className="text-center text-sm text-[#4D4D4D] mt-10">
-            We don't store your documents
-          </p>
         </div>
       </div>
     </div>

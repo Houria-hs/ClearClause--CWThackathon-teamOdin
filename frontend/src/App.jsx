@@ -1,17 +1,23 @@
-import Home from './pages/home';
 import Register from './components/register';
 import Login from './components/login';
 import './App.css'
+import PdfRiskAnalyzer from './components/pdfAnalyzer';
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import WelcomeScreen from './pages/Welcome';
+import Onboarding from './pages/Onboarding';
 
 
 function App() {
+  const [user, setUser] = useState(null);
  return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Register />} />
+        <Route path="/" element={<WelcomeScreen />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/home" element={<Home />} />
+        <Route path="/analyze" element={<PdfRiskAnalyzer user={user} />} />
+        <Route path="/Onboarding" element={<Onboarding setUser={setUser} />} />
       </Routes>
      </BrowserRouter>
   );
