@@ -10,23 +10,32 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
 const allowedOrigins = [
-  "http://localhost:5173", 
-  "https://clearclause-six.vercel.app/" 
+  'http://localhost:5173',
+  'https://clearclause-six.vercel.app' 
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error("CORS policy violation"), false);
+const corsOptions = {
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
     }
-    return callback(null, true);
   },
-  credentials: true
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200 
+};
+
+//  the middleware
+app.use(cors(corsOptions));
+
+app.options('*', cors(corsOptions));
+
+
 app.use(express.json());
 
 // Routes
