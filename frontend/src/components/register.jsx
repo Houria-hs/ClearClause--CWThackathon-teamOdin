@@ -143,7 +143,7 @@ export default function Register() {
                 
                 I agree to the{" "}
                <Link 
-                to="/terms" 
+                to="/TermsAndServices" 
                 className="text-[#D4AF37] font-semibold cursor-pointer hover:underline"
                >
                     Terms and Services

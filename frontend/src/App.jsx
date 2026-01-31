@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import WelcomeScreen from './pages/Welcome';
 import Onboarding from './pages/Onboarding';
-import Terms from './pages/terms';
+import Terms from './pages/TermsAndServices';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -16,7 +16,7 @@ function App() {
         <Route path="/" element={<WelcomeScreen />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/terms" element={<Terms />} />
+        <Route path="/TermsAndServices" element={<Terms />} />
         <Route path="/analyze" element={<PdfRiskAnalyzer user={user} />} />
         <Route path="/Onboarding" element={<Onboarding setUser={setUser} />} />
       </Routes>
