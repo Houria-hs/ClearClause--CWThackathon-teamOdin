@@ -33,7 +33,13 @@ export default function Login() {
       const res = await axios.post(`${API_URL}/api/auth/login`, formData);
 
       localStorage.setItem("token", res.data.token);
-      navigate("/Onboarding"); 
+
+      if (res.data.user.hasOnboarded) {
+        navigate("/analyze"); // Already did onboarding? Skip it!
+     } else {
+        navigate("/Onboarding"); // Fresh? Ask for the name
+     }
+
     }  catch (err) {
         console.error("login error:", err); 
         setError(err.response?.data?.message || "Something went wrong");
@@ -43,8 +49,8 @@ export default function Login() {
   };
 
   return (
-    <div className="flex pt-10">
-      <div className="w-full flex items-center justify-center px-4">
+    <div className="flex justify-center items-center py-6 px-4 ">
+      <div className="w-full flex items-center justify-center px-4 py-10 lg:max-w-2xl bg-white  sm:rounded-[3rem] lg:shadow-2xl animate-in fade-in duration-700 ">
         <div className="w-full max-w-md ">
 
           <p className="text-[#000000] text-start mb-2 text-center font-medium text-[20px] font-['Sora']">
@@ -116,7 +122,7 @@ export default function Login() {
           </form>
 
           {/* Sign up */}
-          <p className="text-center font-['Sora'] text-sm text-[#4D4D4D] mt-8">
+          <p className="text-center font-['Sora'] text-sm text-[#4D4D4D] mt-8 mb-10">
             Don’t have an account?{" "}
             <span
               onClick={() => navigate("/register")}

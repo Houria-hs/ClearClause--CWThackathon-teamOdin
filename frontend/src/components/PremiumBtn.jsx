@@ -2,7 +2,8 @@ import React from 'react';
 import grainImage from "../assets/grains.png"
 
 const PremiumButton = ({ text, onClick, className = "" }) => {
-  return (
+  return ( 
+    <div className='animate-in fade-in slide-in-from-bottom-4 duration-500 transition-transform hover:-translate-y-1'>
           <button
             onClick={onClick}
             className="
@@ -45,6 +46,7 @@ const PremiumButton = ({ text, onClick, className = "" }) => {
                 {text}
             </span>
           </button>
+    </div>
   );
 };
 

@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png"
 import PremiumButton from "./PremiumBtn";
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
 export default function Register() {
   const navigate = useNavigate();
 
@@ -47,8 +46,8 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex pt-10 px-4">
-      <div className="w-full  flex justify-center ">
+    <div className="min-h-screen flex justify-center items-center py-6 px-4">
+      <div className="w-full py-10 px-2 flex justify-center lg:max-w-2xl bg-white  sm:rounded-[3rem] lg:shadow-2xl animate-in fade-in duration-700 ">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="flex justify-center mb-6">
@@ -147,7 +146,7 @@ export default function Register() {
             </span>
           </p>
 
-          <p className="text-center text-sm text-[#4D4D4D] mt-20 font-['Sora'] ">
+          <p className="text-center text-sm text-[#4D4D4D] mt-20 font-['Sora'] mb-10">
             We don't store your documents
           </p>
         </div>

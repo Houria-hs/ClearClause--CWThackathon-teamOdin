@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import PremiumButton from "../components/PremiumBtn";
 import { useNavigate } from "react-router-dom"; 
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function OnboardingName({ setUser }) {
   const [name, setName] = useState("");
@@ -21,13 +24,29 @@ export default function OnboardingName({ setUser }) {
   };
 
 
-  //  When user clicks "Agree & Continue" inside the Modal
-  const handleFinalAgreement = () => {
+const handleFinalAgreement = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    // Only try to update the database if the user is actually logged in
+    if (token) {
+      await axios.put(`${API_URL}/api/auth/complete-onboarding`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    }
+
+    // Persist name and update state 
     setUser({ username: name.trim() });
     localStorage.setItem("userName", name.trim());
+    
+    // Move to the next page
     navigate("/analyze");
-  };
-
+  } catch (err) {
+    console.error("Failed to save onboarding status to database:", err);
+    // Fallback: move them anyway so the app doesn't feel broken
+    navigate("/analyze");
+  }
+};
   return (
     <div className="min-h-screen  sm:bg-[#F1F5F9] sm:p-6 bg-white flex justify-center font-sans overflow-hidden pt-10 ">
       <div className="w-full max-w-md lg:max-w-2xl sm:min-h-[850px] sm:rounded-[3rem] sm:shadow-2xl bg-white flex flex-col relative px-6 lg:px-16 pt-10 lg:pt-20 lg:border lg:border-gray-100 overflow-hidden">
@@ -60,7 +79,7 @@ export default function OnboardingName({ setUser }) {
         <div className="mt-12 h-24 lg:mt-16 flex justify-center sm:justify-center"> 
           {name.trim().length > 0 && (
             /* MODIFIED: Added a max-width for laptop so the button doesn't stretch too far, and added a hover lift effect */
-            <div className="w-full lg:max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500 transition-transform hover:-translate-y-1">
+            <div className="w-full lg:max-w-[480px]">
                 <PremiumButton 
                     text="Proceed" 
                     onClick={handleProceed} 
@@ -69,7 +88,7 @@ export default function OnboardingName({ setUser }) {
           )}
         </div>
 
-        {/* MODIFIED: Bottom decorative text for Laptop */}
+        {/*  Bottom decorative text for Laptop */}
         <div className="hidden lg:block absolute bottom-10 left-0 right-0 text-center text-gray-300 text-[12px] font-medium">
             Privacy First • Secured with AI
         </div>

@@ -388,15 +388,15 @@ const handleLogout = () => {
                         
               {/* Color Code */}
               <div className="flex justify-between px-2 mb-6">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 m-2">
                   <div className="w-4 h-4 bg-green-500 rounded-md"></div>
                   <span className="text-[11px] font-['Sora'] font-bold text-green-600">Secure</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ">
                   <div className="w-4 h-4 bg-orange-500 rounded-md"></div>
                   <span className="text-[11px] font-['Sora'] font-bold text-orange-600">Reviewed</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 m-2">
                   <div className="w-4 h-4 bg-red-500 rounded-md"></div>
                   <span className="text-[11px] font-['Sora'] font-bold text-red-600">Compromised</span>
                 </div>
@@ -415,7 +415,7 @@ const handleLogout = () => {
 
             <h4 
             onClick={resetAnalyzer}
-            className="text-xm text-center font-['Sora'] mt-6  cursor-pointer text-[#0073FF]">
+            className="text-xm text-center font-['Sora'] mt-6 mb-4 cursor-pointer text-[#0073FF]">
               Scan Again
             </h4>
             </div>
