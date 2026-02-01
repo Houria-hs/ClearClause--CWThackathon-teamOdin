@@ -28,7 +28,7 @@ AI Risk Radar: Visual breakdown of ambiguous terms and unfair clauses.
 
 Premium UI/UX: A minimalist, "Sora-inspired" interface optimized for both mobile and laptop 
 
-Secure Auth: Firebase-backed user accounts to manage your profile.
+Secure Auth: Supabase-backed user accounts to manage your profile securely.
 
 ## 📱 Design Philosophy: Mobile-First
 ClearClause is built for the modern user.We intentionally prioritized the **mobile experience** 
