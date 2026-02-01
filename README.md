@@ -79,12 +79,11 @@ npm start
 💻 Frontend Setup
 Open a new terminal window and navigate to the frontend folder:
 cd frontend
+
 Install dependencies:
 
 npm install
 Create a .env file in the frontend folder:
-
-Extrait de code
 VITE_API_URL=https://clearclause-975k.onrender.com
 
 Start the frontend development server:
