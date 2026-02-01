@@ -51,7 +51,6 @@ ClearClause is divided into two main directories: frontend and backend. You will
 1. Prerequisites
 Node.js (v18+ recommended)
 npm or yarn
-
 A Supabase account and a Google Gemini API key.
 
 2. Installation & Setup
