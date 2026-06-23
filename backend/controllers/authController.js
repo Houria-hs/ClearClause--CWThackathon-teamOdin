@@ -2,9 +2,42 @@ const pool = require('../config/db.js');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
+
+// Create a nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const verifyUrl = `http://localhost:5000/auth/verify-email?token=${verificationToken}`;
+
+await transporter.sendMail({
+  from: "your app <your_email@gmail.com>",
+  to: email,
+  subject: "Verify your email",
+  html: `
+    <h2>Welcome ${username}</h2>
+    <p>Click below to verify your email:</p>
+    <a href="${verifyUrl}">Verify Email</a>
+  `,
+});
 
 exports.register = async (req, res) => {
   try {
+    // Generate verification token
+const verificationToken = crypto.randomBytes(32).toString("hex");
+
+// Insert user (NOT verified yet)
+const newUser = await pool.query(
+  `INSERT INTO users (username, email, password, verification_token, is_verified) 
+   VALUES ($1, $2, $3, $4, false) RETURNING *`,
+  [username, email, hashedPassword, verificationToken]
+);
     const { username, email, password } = req.body;
 
     // Check if user exists
@@ -35,6 +68,9 @@ exports.register = async (req, res) => {
   } catch (err) {
     console.error('Register backend error:', err);
     res.status(500).json({ error: err.message });
+    res.status(201).json({
+    message: "Check your email to verify your account"
+   });
   }
 };
 
