@@ -1,9 +1,9 @@
-⚖️ ClearClause 
+## ⚖️ ClearClause 
 Making Legal Contracts Legible for Everyone.
 
 ClearClause is a premium AI-powered legal document analyzer designed to strip away "legalese" and expose hidden risks. We provide a privacy-first, instant audit of your contracts so you can sign with confidence.
 
-🛑 The Problem
+## 🛑 The Problem
 Legal documents are intentionally complex. Most people sign contracts without fully understanding them because:
 
 Hidden Risks: Unfair "Limitation of Liability" or "Termination" clauses are buried in fine print.
@@ -12,7 +12,7 @@ Costly Advice: Consulting a lawyer for every minor document is expensive and slo
 
 Privacy Concerns: Existing AI tools often store your sensitive documents to train their models.
 
-✅ The Solution
+## ✅ The Solution
 ClearClause solves this by providing a high-speed, AI-driven "risk radar" that:
 
 Categorizes Risk: Instantly flags clauses as "High Risk" (Red), "Medium Risk" (Orange), or "Secure" (Green).
@@ -21,61 +21,104 @@ Privacy-First Architecture: Operates on a non-retention basis. Your documents ar
 
 Accessibility: Translates complex legal jargon into plain English summaries.
 
-✨ Core Features
-Smart PDF Analysis: Drag-and-drop PDF, DOCS, or PNG files for instant scanning.
+## ✨ Core Features
+Smart PDF Analysis: Drag-and-drop PDF files for instant scanning.
 
 AI Risk Radar: Visual breakdown of ambiguous terms and unfair clauses.
 
-Premium UI/UX: A minimalist, "Sora-inspired" interface optimized for both mobile and laptop.
+Premium UI/UX: A minimalist, "Sora-inspired" interface optimized for both mobile and laptop 
 
-Secure Auth: Firebase-backed user accounts to manage your profile.
+Secure Auth: Supabase-backed user accounts to manage your profile securely.
 
-🛠️ Tech Stack
+## 📱 Design Philosophy: Mobile-First
+ClearClause is built for the modern user.We intentionally prioritized the **mobile experience** 
+to ensure that document analysis is accessible during meetings, at signing tables, or on the move.
+While we support laptop views, the most "premium" and polished experience is found on mobile devices.
+
+## 🛠️ Tech Stack
 Frontend: React.js, Tailwind CSS
 
-Backend & Auth: NodeJS, Express, Firebase
+Backend & Database: NodeJS, Express, Supabase (PostgreSQL + Auth)
+
+AI Engine: Google Gemini AI, Model(gemini-2.5-flash)
 
 Deployment: Vercel for frontend, Render for backend
 
-🚀 How to Run & Test
-Follow these steps to get your local environment running:
+## 🚀 How to Run & Test
+
+ClearClause is divided into two main directories:frontend and backend. You will need to run both simultaneously for the application to function.
 
 1. Prerequisites
-Ensure you have Node.js (v16+) and npm installed.
+   
+Node.js (v18+ recommended)
 
-2. Installation
+npm or yarn
 
-# Clone the repository
-git clone https://github.com/Houria-hs/CWThackathon-teamOdin.git
+A Supabase account and a Google Gemini API key.
 
-# Enter the directory
-cd clearclause
+3. Installation & Setup
+   
+First, clone the repository:
 
-# Install dependencies
+git clone https://github.com/Houria-hs/ClearClause--CWThackathon-teamOdin.git
+
+cd ClearClause--CWThackathon-teamOdin
+
+
+🛠️ Backend Setup
+
+Navigate to the backend folder:
+
+cd backend
+
+Install dependencies:
+
 npm install
 
-3. Environment Setup
-Create a .env file in the root directory and add your supabase and AI API credentials:
-DATABASE_URL=your_db_Url
-GEMINI_API_KEY=you_API_Key
+Create a .env file in the backend folder:
 
-4. Running Locally
-Bash
-# Start the development server
+PORT=5000
+
+DATABASE_URL=your_supabase_db_url
+
+GEMINI_API_KEY=your_gemini_api_key
+
+JWT_SECRET=your_custom_jwt_secret
+
+Start the backend server:
+
+npm start
+
+
+💻 Frontend Setup
+
+Open a new terminal window and navigate to the frontend folder:
+
+cd frontend
+
+Install dependencies:
+
+npm install
+
+Create a .env file in the frontend folder:
+VITE_API_URL=https://clearclause-975k.onrender.com
+
+Start the frontend development server
+
 npm run dev
-Navigate to http://localhost:5173 to view the app.
 
 5. Testing
+   
 UI Testing: Check the "Laptop View" vs "Mobile View" by resizing your browser.
 
 Upload Test: Use a sample PDF to test the scanning animation and risk categorization.
 
 Auth Test: Register a new account and verify the login flow.
 
-🌐 Live Deployment
+## 🌐 Live Deployment
 The project is live and can be accessed here:
 
 👉 https://clearclause-six.vercel.app/
 
-📄 Privacy Policy
+## 📄 Privacy Policy
 ClearClause does not store your documents. We use a transient data-processing pipeline that ensures your legal information stays yours.
