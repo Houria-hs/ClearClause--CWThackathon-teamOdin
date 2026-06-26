@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import WelcomeScreen from './pages/Welcome';
 import Onboarding from './pages/Onboarding';
 import Terms from './pages/TermsAndServices';
+import VerifyEmail from './components/verifyEmail';
 
 function App() {
   const [user, setUser] = useState(null);
