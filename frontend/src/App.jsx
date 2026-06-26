@@ -19,6 +19,7 @@ function App() {
         <Route path="/TermsAndServices" element={<Terms />} />
         <Route path="/analyze" element={<PdfRiskAnalyzer user={user} />} />
         <Route path="/Onboarding" element={<Onboarding setUser={setUser} />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
       </Routes>
      </BrowserRouter>
   );

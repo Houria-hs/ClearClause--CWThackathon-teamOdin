@@ -16,5 +16,12 @@ pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
   process.exit(-1);
 });
-
+pool.connect()
+  .then(client => {
+    console.log("✅ Connected to PostgreSQL");
+    client.release();
+  })
+  .catch(err => {
+    console.error("❌ Database connection failed:", err);
+  });
 module.exports = pool;
