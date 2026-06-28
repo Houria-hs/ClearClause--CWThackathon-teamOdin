@@ -179,9 +179,9 @@ exports.verifyEmail = async (req, res) => {
       [user.rows[0].id]
     );
 
-    return res.json({
-      message: "Email verified successfully!",
-    });
+    return res.redirect(
+  `${process.env.CLIENT_URL}/verify-email-success`
+);
 
   } catch (err) {
     console.error(err);
