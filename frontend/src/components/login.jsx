@@ -45,9 +45,20 @@ export default function Login() {
      }
 
     }  catch (err) {
-        console.error("login error:", err); 
-        setError(err.response?.data?.message || "Something went wrong");
-    } finally {
+
+    if (err.response?.data?.code === "EMAIL_NOT_VERIFIED") {
+
+        navigate("/verify-email-pending", {
+            state: {
+                email: err.response.data.email
+            }
+        });
+
+        return;
+    }
+
+    setError(err.response?.data?.message || "Something went wrong");
+}finally {
       setLoading(false);
     }
   };
@@ -94,7 +105,7 @@ return (
           <form onSubmit={handleSubmit} className="w-full space-y-6">
             {/* EMAIL */}
             <div className="flex flex-col items-start gap-3">
-              <label className="text-[16px] font-semibold text-[#4D4D4D]">Email address</label>
+              <label className="text-[16px] font-semibold text-[#4D4D4D]" htmlFor="email">Email address</label>
               <input
                 type="email"
                 name="email"
@@ -108,7 +119,7 @@ return (
 
             {/* PASSWORD */}
             <div className="flex flex-col items-start gap-3">
-              <label className="text-[16px] font-semibold text-[#4D4D4D]">Password</label>
+              <label className="text-[16px] font-semibold text-[#4D4D4D]" htmlFor="password">Password</label>
               <div className="relative w-full">
                 <input
                   type={showPassword ? "text" : "password"}

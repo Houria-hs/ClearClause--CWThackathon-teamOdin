@@ -36,10 +36,15 @@ export default function Register() {
     try {
       setLoading(true);
       const res = await axios.post(`${API_URL}/api/auth/register`, formData);
-      localStorage.setItem("token", res.data.token); 
-      navigate("/login");
+      navigate("/verify-email-pending", {
+  state: {
+    email: formData.email,
+  },
+});
+      // localStorage.setItem("token", res.data.token); 
+      // navigate("/login");
     } catch (err) {
-        console.error("Register error:", err); 
+        console.log(err.response?.data);
         setError(err.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
@@ -95,7 +100,8 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="flex flex-col items-start gap-[12px]">
-              <label className="text-[16px] font-medium text-[#4D4D4D]">Full name</label>
+              <label 
+              className="text-[16px] font-medium text-[#4D4D4D]" htmlFor="username">Full name</label>
               <input
                 type="text"
                 name="username"
@@ -108,7 +114,7 @@ export default function Register() {
             </div>
 
             <div className="flex flex-col items-start gap-[12px]">
-              <label className="text-[16px] font-medium text-[#4D4D4D]">Email address</label>
+              <label className="text-[16px] font-medium text-[#4D4D4D]" htmlFor="email">Email address</label>
               <input
                 type="email"
                 name="email"
@@ -121,7 +127,7 @@ export default function Register() {
             </div>
 
             <div className="flex flex-col items-start gap-[12px]">
-              <label className="text-[16px] font-medium text-[#4D4D4D]">Password</label>
+              <label className="text-[16px] font-medium text-[#4D4D4D]" htmlFor="password">Password</label>
               <div className="relative w-full">
                 <input
                   type={showPassword ? "text" : "password"}

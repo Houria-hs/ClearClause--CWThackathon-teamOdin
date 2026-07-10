@@ -238,3 +238,39 @@ exports.completeOnboarding = async (req, res) => {
     });
   }
 };
+
+
+
+exports.testVerifyUser = async (req, res) => {
+  try {
+    // Never allow this in production
+    if (process.env.NODE_ENV === "production") {
+      return res.status(403).json({
+        message: "Forbidden",
+      });
+    }
+
+    const { email } = req.body;
+
+    await pool.query(
+      `
+      UPDATE users
+      SET is_verified = true,
+          verification_token = NULL
+      WHERE email = $1
+      `,
+      [email]
+    );
+
+    res.json({
+      message: "User verified successfully",
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};

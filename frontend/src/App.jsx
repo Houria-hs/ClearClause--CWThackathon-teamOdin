@@ -8,6 +8,8 @@ import WelcomeScreen from './pages/Welcome';
 import Onboarding from './pages/Onboarding';
 import Terms from './pages/TermsAndServices';
 import VerifyEmail from './components/verifyEmail';
+import VerifyEmailPending from './pages/VerifyEmailPending';
+import verifyEmailSuccess from './pages/VerifyEmailSuccess';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -21,6 +23,8 @@ function App() {
         <Route path="/analyze" element={<PdfRiskAnalyzer user={user} />} />
         <Route path="/Onboarding" element={<Onboarding setUser={setUser} />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/verify-email-pending" element={<VerifyEmailPending />} />
+        <Route path="/verify-email-success" element={<verifyEmailSuccess />} />
       </Routes>
      </BrowserRouter>
   );
