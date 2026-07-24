@@ -13,11 +13,27 @@ model User {
   email               String   @unique
   password            String
 
-  hasOnboarded        Boolean  @default(false)
-  isVerified          Boolean  @default(false)
-  verificationToken   String?
+  hasOnboarded        Boolean  @default(false) @map("has_onboarded")
+  isVerified          Boolean  @default(false) @map("is_verified")
+  verificationToken   String?  @map("verification_token")
 
   createdAt           DateTime @default(now())
+  documents           Document[]
 
   @@map("users")
+}
+
+model Document {
+  id            String   @id
+  userId        Int      @map("user_id")
+  filename      String
+  mimeType      String?  @map("mime_type")
+  extractedText String   @map("extracted_text")
+  analysis      Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("documents")
 }

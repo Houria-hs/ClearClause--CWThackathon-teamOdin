@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import logo from "../assets/logo.png"
 import PremiumButton from "./PremiumBtn";
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from "../config/api";
 export default function Register() {
   const navigate = useNavigate();
 
@@ -35,7 +35,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-      const res = await axios.post(`${API_URL}/api/auth/register`, formData);
+      await axios.post(`${API_URL}/api/auth/register`, formData);
       navigate("/verify-email-pending", {
   state: {
     email: formData.email,
@@ -188,7 +188,7 @@ export default function Register() {
           </p>
 
           <p className="text-center text-sm text-[#9D9A9A] mt-16 lg:text-left">
-            🔒 We don't store your documents
+            🔒 Your document data stays protected
           </p>
         </div>
       </div>

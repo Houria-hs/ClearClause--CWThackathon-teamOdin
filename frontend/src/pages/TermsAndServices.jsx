@@ -73,9 +73,7 @@ return (
             3. Privacy & Data Processing
           </h2>
           <p className="font-['Sora']">
-            Clear Clause operates on a <span className="text-[#0073FF] font-medium">non-retention basis</span>. 
-            Documents uploaded for analysis are processed in real time and are not stored,
-            retained, or used for model training after the session ends. Your privacy is our baseline.
+            Uploaded source files are removed after extraction. ClearClause stores extracted text and analysis for your account so you can review results and use Ask ClearClause. This information is not shared or used for model training. Your privacy is our baseline.
           </p>
         </section>
 

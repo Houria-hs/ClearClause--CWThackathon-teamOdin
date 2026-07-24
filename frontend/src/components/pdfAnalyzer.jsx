@@ -6,11 +6,13 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom"; 
 import { pdf } from '@react-pdf/renderer';
 import { ResultExport } from "./ResultExport";
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from "../config/api";
+import AskClearClause from "./AskClearClause";
 
 export default function PdfRiskAnalyzer() {
   const [file, setFile] = useState(null);
   const [chunks, setChunks] = useState([]);
+  const [documentId, setDocumentId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
@@ -48,6 +50,7 @@ const resetAnalyzer = () => {
   setFile(null);
   setUploadProgress(0);
   setChunks([]);
+  setDocumentId(null);
   setError("");
   setStep("upload");
 };
@@ -68,7 +71,6 @@ useEffect(() => {
           username: savedName || data.username 
         });
 
-        triggerToast();
         return; 
       } catch (err) {
         console.error("Token invalid");
@@ -78,7 +80,6 @@ useEffect(() => {
 
     if (savedName) {
       setUser({ username: savedName });
-      triggerToast();
     }
   };
 
@@ -106,10 +107,12 @@ const handleUpload = async () => {
     const formData = new FormData();
     formData.append("pdf", file);
 
-    const { data } = await axios.post(`${API_URL}/api/pdf/upload`, formData);
+    const token = localStorage.getItem("token");
+    const { data } = await axios.post(`${API_URL}/api/pdf/upload`, formData, { headers: { Authorization: `Bearer ${token}` } });
+    setDocumentId(data.documentId);
     
     // Pass chunks to analysis
-    await handleAnalyze(data.chunks); 
+    await handleAnalyze(data.chunks, data.documentId);
     
   } catch (err) {
     const errorMsg = err.response?.data?.error || "Analysis failed. Please try again.";
@@ -127,19 +130,14 @@ const handleUpload = async () => {
     setFile(selectedFile);
     setUploadProgress(0);
 
-    // Simulate progress bar as seen in design
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(progress);
-      if (progress >= 100) clearInterval(interval);
-    }, 50);
+    setUploadProgress(100);
   };
 
 
-  const handleAnalyze = async (chunksData) => {
+  const handleAnalyze = async (chunksData, currentDocumentId = documentId) => {
     try {
-      const { data } = await axios.post(`${API_URL}/api/pdf/analyze`, { chunks: chunksData });
+      const token = localStorage.getItem("token");
+      const { data } = await axios.post(`${API_URL}/api/pdf/analyze`, { chunks: chunksData, documentId: currentDocumentId }, { headers: { Authorization: `Bearer ${token}` } });
       // Check if Gemini rejected it as a non-legal document
     if (data.analyzedChunks[0]?.is_legal === false) {
        setError(data.analyzedChunks[0].error);
@@ -150,7 +148,7 @@ const handleUpload = async () => {
       setChunks(data.analyzedChunks);
       setStep("result");
       
-    } catch {
+  } catch {
       setError("Failed to analyze content.");
       setStep("upload");
     }
@@ -484,6 +482,7 @@ const handleLogout = () => {
             className="text-xm text-center font-['Sora'] mt-6 mb-4 cursor-pointer text-[#0073FF]">
               Scan Again
             </h4>
+            {documentId && <AskClearClause documentId={documentId} filename={file?.name || "Uploaded document"} chunks={chunks} />}
             </div>
           )}
         </div>

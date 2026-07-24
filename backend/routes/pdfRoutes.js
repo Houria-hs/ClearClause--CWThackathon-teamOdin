@@ -2,102 +2,77 @@ const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const { PDFExtract } = require("pdf.js-extract");
+const pool = require("../config/db.js");
+const verifyToken = require("../middleware/authMiddleware.js");
 const { analyzeClause } = require("../services/geminiAnalyzer");
 
 const router = express.Router();
 const pdfExtract = new PDFExtract();
-
-const upload = multer({
-  dest: "uploads/",
-  limits: { fileSize: 10 * 1024 * 1024 }
-});
+const upload = multer({ dest: "uploads/", limits: { fileSize: 10 * 1024 * 1024 } });
 
 function chunkText(text) {
   return text
     .split(/(?<=\.)\s+(?=[A-Z])/)
-    .map(c => c.trim())
-    .filter(c => c.length > 80 && c.length < 1200);
+    .map((chunk) => chunk.trim())
+    .filter((chunk) => chunk.length > 80 && chunk.length < 1200);
 }
 
-/* ---------- UPLOAD & EXTRACT ---------- */
-router.post("/upload", upload.single("pdf"), async (req, res) => {
+router.post("/upload", verifyToken, upload.single("pdf"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No PDF uploaded" });
-
   const filePath = path.resolve(req.file.path);
 
   try {
-    // We wrap the extraction in a Promise to handle it cleanly
-    pdfExtract.extract(filePath, {}, (err, data) => {
-      
-      // 1. DELETE THE FILE IMMEDIATELY ONCE READ
-      // Placing it at the very top of the callback ensures it's gone 
-      // even if the rest of your text logic fails.
+    pdfExtract.extract(filePath, {}, async (err, data) => {
+      try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (cleanupError) { console.error("Upload cleanup error:", cleanupError.message); }
+      if (err) return res.status(500).json({ error: "Failed to extract PDF text" });
+
       try {
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      } catch (unlinkErr) {
-        console.error("Cleanup Error:", unlinkErr);
-      }
+        const fullText = data.pages.map((page) => page.content.map((item) => item.str).join(" ")).join("\n");
+        if (!fullText.trim() || fullText.trim().length < 50) return res.status(422).json({ error: "This file contains no readable text." });
+        const chunks = chunkText(fullText);
+        if (!chunks.length) return res.status(400).json({ error: "The document is too short." });
 
-      if (err) {
-        console.error("PDF Extraction Error:", err);
-        return res.status(500).json({ error: "Failed to extract PDF text" });
+        const documentId = crypto.randomUUID();
+        await pool.query(
+          `INSERT INTO documents (id, user_id, filename, mime_type, extracted_text)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [documentId, req.userId, req.file.originalname || "Uploaded document", req.file.mimetype || null, fullText]
+        );
+        return res.json({ documentId, filename: req.file.originalname, chunks });
+      } catch (error) {
+        console.error("Document persistence error:", error.message);
+        return res.status(500).json({ error: "Unable to prepare this document for analysis." });
       }
-
-      const fullText = data.pages
-        .map(page => page.content.map(item => item.str).join(" "))
-        .join("\n");
-
-      if (!fullText.trim() || fullText.trim().length < 50) {
-        return res.status(422).json({ 
-          error: "This file contains no readable text." 
-        });
-      }
-      
-      const chunks = chunkText(fullText);
-      if (chunks.length === 0) {
-        return res.status(400).json({ error: "The document is too short." });
-      }
-
-      res.json({ chunks });
     });
-  } catch (globalErr) {
-    // 2. FALLBACK DELETE
-    // If something goes wrong before the extract callback even fires
+  } catch (error) {
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    console.error("Global Upload Error:", globalErr);
-    res.status(500).json({ error: "Internal server error during upload" });
+    console.error("Upload error:", error.message);
+    return res.status(500).json({ error: "Internal server error during upload" });
   }
 });
 
-/* ---------- ANALYZE ---------- */
-router.post("/analyze", async (req, res) => {
+router.post("/analyze", verifyToken, async (req, res) => {
+  const { chunks, documentId } = req.body;
+  if (!documentId || !Array.isArray(chunks)) return res.status(400).json({ error: "A document and chunks are required." });
+
   try {
-    const { chunks } = req.body;
-    if (!Array.isArray(chunks)) {
-      return res.status(400).json({ error: "Invalid chunks" });
-    }
+    const owned = await pool.query("SELECT id FROM documents WHERE id = $1 AND user_id = $2", [documentId, req.userId]);
+    if (!owned.rows.length) return res.status(404).json({ error: "Document not found or you do not have access." });
 
     const analyzedChunks = [];
-    
-for (const chunk of chunks) {
-  const text = typeof chunk === "string" ? chunk : chunk.text;
-
-  const analysis = await analyzeClause(text);
-
-  analyzedChunks.push({
-    text,
-    risk: analysis.risk_level,
-    explanation: analysis.reason
-  });
-}
-await new Promise(resolve => setTimeout(resolve, 1500));
-
-
-    res.json({ analyzedChunks });
-  } catch (err) {
-    console.error("Analysis Error:", err);
-    res.status(500).json({ error: "AI analysis failed" });
+    for (const chunk of chunks) {
+      const text = typeof chunk === "string" ? chunk : chunk.text;
+      if (typeof text !== "string") continue;
+      const analysis = await analyzeClause(text);
+      analyzedChunks.push({ text, risk: analysis.risk_level, explanation: analysis.reason });
+    }
+    await pool.query("UPDATE documents SET analysis = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3", [JSON.stringify(analyzedChunks), documentId, req.userId]);
+    return res.json({ documentId, analyzedChunks });
+  } catch (error) {
+    console.error("Analysis error:", error.message);
+    return res.status(500).json({ error: "AI analysis failed" });
   }
 });
 

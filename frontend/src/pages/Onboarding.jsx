@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import PremiumButton from "../components/PremiumBtn";
 import { useNavigate } from "react-router-dom"; 
 import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from "../config/api";
 
 export default function OnboardingName({ setUser }) {
   const [name, setName] = useState("");
@@ -112,18 +111,13 @@ const handleFinalAgreement = async () => {
       <div className="mt-10">
         <h2 className="text-[18px] leading-[20px] lg:text-[22px] font-semibold text-black mb-2 font-['Sora'] ">Data Privacy:</h2>
         <p className="text-[14px] lg:text-[15px] leading-[20px] text-[#000000] font-['Sora'] mb-6 font-normal">
-          In case you’re wondering whether Clear Clause stores your documents — no, we don’t. 
-          Files you upload are processed securely and are not saved, shared, or used for training purposes. <br />
-          Once analysis is complete, your document is discarded automatically. 
-          Your data stays yours. Always.
+          ClearClause protects your document information.
+          Uploaded source files are removed after text extraction. To provide your analysis and Ask ClearClause, we retain the extracted text and analysis securely for your account. It is not shared or used for training.
         </p>
 
         <h2 className="text-[18px] leading-[20px] lg:text-[22px] font-semibold text-black font-['Sora'] mb-2">Updates to These Terms:</h2>
         <p className="text-[14px]/[20px] text-[#000000] lg:text-[15px] font-['Sora'] mb-10 font-normal leading-[20px]">
-          We may update these terms to improve clarity, security, or functionality. 
-          Any changes will be reflected within the app before taking effect. 
-          Continued use of Clear Clause means you accept the updated terms. 
-          Transparency is part of the deal.
+          We may update these terms to improve clarity, security, or functionality. Any changes will be reflected within the app before taking effect. Continued use of Clear Clause means you accept the updated terms.
         </p>
 
         <div className="hover:scale-[1.01] transition-transform">

@@ -17,7 +17,7 @@ ClearClause solves this by providing a high-speed, AI-driven "risk radar" that:
 
 Categorizes Risk: Instantly flags clauses as "High Risk" (Red), "Medium Risk" (Orange), or "Secure" (Green).
 
-Privacy-First Architecture: Operates on a non-retention basis. Your documents are processed in real-time and deleted the moment you close the session.
+Privacy-First Architecture: Uploaded source files are deleted after extraction. Extracted text and analysis are stored only for the signed-in owner so they can review results and use Ask ClearClause.
 
 Accessibility: Translates complex legal jargon into plain English summaries.
 
@@ -77,14 +77,25 @@ npm install
 
 Create a .env file in the backend folder:
 
+```env
+NODE_ENV=development
 PORT=5000
-
+CLIENT_URL=http://localhost:5173
+BACKEND_URL=http://localhost:5000
 DATABASE_URL=your_supabase_db_url
-
 GEMINI_API_KEY=your_gemini_api_key
-
 JWT_SECRET=your_custom_jwt_secret
+EMAIL_USER=your_email_address
+EMAIL_PASS=your_email_app_password
+```
 
+For Render production, configure the same secrets plus:
+
+```env
+NODE_ENV=production
+CLIENT_URL=https://clearclause-six.vercel.app
+BACKEND_URL=https://clearclause-975k.onrender.com
+```
 Start the backend server:
 
 npm start
@@ -101,7 +112,12 @@ Install dependencies:
 npm install
 
 Create a .env file in the frontend folder:
-VITE_API_URL=https://clearclause-975k.onrender.com
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+For Vercel production, set `VITE_API_URL=https://clearclause-975k.onrender.com` in the project environment variables and redeploy so Vite includes it in the build.
 
 Start the frontend development server
 
@@ -121,4 +137,17 @@ The project is live and can be accessed here:
 👉 https://clearclause-six.vercel.app/
 
 ## 📄 Privacy Policy
-ClearClause does not store your documents. We use a transient data-processing pipeline that ensures your legal information stays yours.
+ClearClause stores the extracted text and analysis of a document only for the signed-in owner's analysis and Ask ClearClause session. Uploaded source files are still deleted after text extraction.
+
+## Ask ClearClause
+
+After a signed-in user uploads and analyzes a document, Ask ClearClause answers questions using that document's extracted text and risk analysis. The data is stored in the `documents` table under the authenticated user's ID and cannot be queried by another user.
+
+Before deploying the backend, apply the included migration:
+
+```bash
+cd backend
+npx prisma migrate deploy
+```
+
+Production Ask ClearClause requires `GEMINI_API_KEY` on the backend only; it is never exposed to the frontend.

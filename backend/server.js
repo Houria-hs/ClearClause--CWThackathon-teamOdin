@@ -1,19 +1,16 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+dotenv.config();
+
+const { clientUrl } = require("./config/env.js");
 const authRoutes = require("./routes/authRoutes.js");
 const pdfRoutes = require("./routes/pdfRoutes.js");
-
-
-
-dotenv.config();
+const documentRoutes = require("./routes/documentRoutes.js");
 
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://clearclause-six.vercel.app' 
-];
+const allowedOrigins = [clientUrl()];
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -36,9 +33,12 @@ app.use(cors(corsOptions));
 app.options(/(.*)/, cors(corsOptions));
 app.use(express.json());
 
+app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/pdf", pdfRoutes);
+app.use("/api/documents", documentRoutes);
 
 
 const PORT = process.env.PORT || 5000;

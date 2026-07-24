@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import PremiumButton from "./PremiumBtn";
 import logo from "../assets/logo.png"
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from "../config/api";
 
 
 export default function Login() {
@@ -101,6 +100,12 @@ return (
           <p className="text-[#8E8E8E] text-center lg:text-left mb-10 font-['Sora'] font-normal text-lg leading-relaxed">
             Securely access your account to start scanning contracts
           </p>
+
+          {error && (
+            <div role="alert" className="mb-6 w-full rounded-lg border border-red-300 bg-red-100 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="w-full space-y-6">
             {/* EMAIL */}

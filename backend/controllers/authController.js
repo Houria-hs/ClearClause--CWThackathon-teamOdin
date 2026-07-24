@@ -3,274 +3,165 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+const { clientUrl, backendUrl } = require("../config/env.js");
 require("dotenv").config();
 
-// Nodemailer transporter
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const normalizedEmail = (email) => String(email || "").trim().toLowerCase();
 
-// ====================== REGISTER ======================
+async function sendVerificationEmail({ email, username, verificationToken }) {
+  const verifyUrl = `${backendUrl()}/api/auth/verify-email?token=${encodeURIComponent(verificationToken)}`;
+
+  // The test suite follows the same token link without needing a real mail provider.
+  if (process.env.NODE_ENV === "test") return verifyUrl;
+
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error("Email delivery is not configured");
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+  });
+  await transporter.sendMail({
+    from: `"ClearClause" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Verify your ClearClause email",
+    html: `<h2>Welcome ${username}</h2><p>Verify your ClearClause account:</p><p><a href="${verifyUrl}">Verify email</a></p><p>If you did not create this account, you can ignore this email.</p>`,
+  });
+  return verifyUrl;
+}
+
 exports.register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-
-    // Check if email already exists
-    const userCheck = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
-
-    if (userCheck.rows.length > 0) {
-      return res.status(400).json({
-        message: "User already exists",
-      });
+    const username = String(req.body.username || "").trim();
+    const email = normalizedEmail(req.body.email);
+    const { password } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "Username, email, and password are required." });
     }
 
-    // Hash password
+    const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+    if (existing.rows.length) return res.status(409).json({ message: "User already exists" });
+
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
-
-    // Save user
-    const newUser = await pool.query(
-      `INSERT INTO users
-      (username, email, password, is_verified, verification_token)
-      VALUES ($1, $2, $3, false, $4)
-      RETURNING *`,
+    const created = await pool.query(
+      `INSERT INTO users (username, email, password, is_verified, verification_token)
+       VALUES ($1, $2, $3, false, $4) RETURNING id`,
       [username, email, hashedPassword, verificationToken]
     );
 
-    // Verification link
-    const verifyUrl =
-    `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+    try {
+      await sendVerificationEmail({ email, username, verificationToken });
+    } catch (mailError) {
+      await pool.query("DELETE FROM users WHERE id = $1", [created.rows[0].id]);
+      throw mailError;
+    }
 
-    // Send verification email
-    await transporter.sendMail({
-      from: `"ClearClause" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Verify your email",
-      html: `
-        <h2>Welcome ${username} 👋</h2>
-        <p>Click the button below to verify your email.</p>
-
-        <a href="${verifyUrl}"
-           style="
-             background:#2563eb;
-             color:white;
-             padding:12px 20px;
-             text-decoration:none;
-             border-radius:6px;
-             display:inline-block;
-           ">
-          Verify Email
-        </a>
-
-        <p>If you didn't create this account, you can ignore this email.</p>
-      `,
-    });
-
-    return res.status(201).json({
-      message: "Registration successful. Please check your email to verify your account.",
-    });
-
+    return res.status(201).json({ message: "Registration successful. Please check your email to verify your account." });
   } catch (err) {
-    console.error("Register error:", err);
-    return res.status(500).json({
-      message: "Server error",
-      error: err.message,
-    });
+    console.error("Register error:", err.message);
+    return res.status(500).json({ message: "Unable to create account. Please try again." });
   }
 };
 
-// ====================== LOGIN ======================
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizedEmail(req.body.email);
+    const { password } = req.body;
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (!result.rows.length) return res.status(401).json({ message: "Invalid email or password" });
+    const user = result.rows[0];
 
-    const userCheck = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
-
-    if (userCheck.rows.length === 0) {
-      return res.status(400).json({
-        message: "User not found",
-      });
+    if (!await bcrypt.compare(password || "", user.password)) {
+      return res.status(401).json({ message: "Invalid email or password" });
     }
-
-    const user = userCheck.rows[0];
-
-    // Check email verification FIRST
-    if (!user.is_verified) {
-      return res.status(403).json({
-        message: "Please verify your email first.",
-      });
+    // Only the database boolean value true may receive a JWT. This rejects
+    // false, null, undefined, 0, and any non-boolean value.
+    if (user.is_verified !== true) {
+      return res.status(403).json({ message: "Please verify your email first.", code: "EMAIL_NOT_VERIFIED", email: user.email });
     }
+    if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not configured");
 
-    // Check password
-    const validPassword = await bcrypt.compare(
-      password,
-      user.password
-    );
-
-    if (!validPassword) {
-      return res.status(400).json({
-        message: "Invalid password",
-      });
-    }
-
-    // Generate JWT
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "24h",
-      }
-    );
-
-    return res.json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        hasOnboarded: user.has_onboarded,
-      },
-    });
-
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "24h" });
+    return res.json({ token, user: { id: user.id, username: user.username, email: user.email, hasOnboarded: user.has_onboarded } });
   } catch (err) {
-    console.error("Login error:", err);
-    return res.status(500).json({
-      message: err.message,
-    });
+    console.error("Login error:", err.message);
+    return res.status(500).json({ message: "Unable to log in. Please try again." });
   }
 };
 
-// ====================== VERIFY EMAIL ======================
 exports.verifyEmail = async (req, res) => {
   try {
-    const { token } = req.query;
+    const token = typeof req.query.token === "string" ? req.query.token : "";
+    if (!token) return res.status(400).json({ message: "Invalid verification token." });
 
-    const user = await pool.query(
-      "SELECT * FROM users WHERE verification_token = $1",
+    // Resolve configuration before the state change. A bad redirect setting
+    // must not verify an account; browser navigation happens after this reply.
+    const redirectUrl = `${clientUrl()}/verify-email-success`;
+    const result = await pool.query(
+      `UPDATE users
+       SET is_verified = true, verification_token = NULL
+       WHERE verification_token = $1
+       RETURNING id`,
       [token]
     );
+    if (!result.rows.length) return res.status(400).json({ message: "Invalid or already-used verification token." });
 
-    if (user.rows.length === 0) {
-      return res.status(400).json({
-        message: "Invalid verification token.",
-      });
-    }
-
-    await pool.query(
-      `UPDATE users
-       SET is_verified = true,
-           verification_token = NULL
-       WHERE id = $1`,
-      [user.rows[0].id]
-    );
-
-    return res.redirect(
-  `${process.env.CLIENT_URL}/verify-email-success`
-);
-
+    return res.redirect(redirectUrl);
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      message: "Verification failed.",
-    });
+    console.error("Verification error:", err.message);
+    return res.status(500).json({ message: "Verification failed." });
   }
 };
 
-// ====================== PROFILE ======================
 exports.getProfile = async (req, res) => {
   try {
-    const user = await pool.query(
-      "SELECT id, username, email, has_onboarded FROM users WHERE id = $1",
-      [req.userId]
-    );
-
-    if (user.rows.length === 0) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    res.json(user.rows[0]);
-
+    const user = await pool.query("SELECT id, username, email, has_onboarded FROM users WHERE id = $1", [req.userId]);
+    if (!user.rows.length) return res.status(404).json({ message: "User not found" });
+    return res.json(user.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      message: "Server error",
-    });
+    console.error("Profile error:", err.message);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
-// ====================== ONBOARDING ======================
 exports.completeOnboarding = async (req, res) => {
   try {
-    const { username } = req.body;
-
-    await pool.query(
-      `UPDATE users
-       SET has_onboarded = TRUE,
-           username = $1
-       WHERE id = $2`,
-      [username, req.userId]
-    );
-
-    res.json({
-      message: "Onboarding completed.",
-    });
-
+    const username = String(req.body.username || "").trim();
+    if (!username) return res.status(400).json({ message: "A username is required." });
+    await pool.query("UPDATE users SET has_onboarded = TRUE, username = $1 WHERE id = $2", [username, req.userId]);
+    return res.json({ message: "Onboarding completed." });
   } catch (err) {
-    res.status(500).json({
-      message: "Update failed.",
-    });
+    console.error("Onboarding error:", err.message);
+    return res.status(500).json({ message: "Update failed." });
   }
 };
 
-
-
-exports.testVerifyUser = async (req, res) => {
+exports.getTestVerificationLink = async (req, res) => {
+  if (process.env.NODE_ENV !== "test") return res.status(404).json({ message: "Not found" });
   try {
-    // Never allow this in production
-    if (process.env.NODE_ENV === "production") {
-      return res.status(403).json({
-        message: "Forbidden",
-      });
-    }
-
-    const { email } = req.body;
-
-    await pool.query(
-      `
-      UPDATE users
-      SET is_verified = true,
-          verification_token = NULL
-      WHERE email = $1
-      `,
-      [email]
-    );
-
-    res.json({
-      message: "User verified successfully",
-    });
-
+    const result = await pool.query("SELECT verification_token FROM users WHERE email = $1", [normalizedEmail(req.body.email)]);
+    const token = result.rows[0]?.verification_token;
+    if (!token) return res.status(404).json({ message: "Pending verification user not found." });
+    return res.json({ verificationUrl: `${backendUrl()}/api/auth/verify-email?token=${encodeURIComponent(token)}` });
   } catch (err) {
-    console.error(err);
+    console.error("Test verification link error:", err.message);
+    return res.status(500).json({ message: "Unable to retrieve test verification link." });
+  }
+};
 
-    res.status(500).json({
-      message: err.message,
-    });
+exports.getTestUserState = async (req, res) => {
+  if (process.env.NODE_ENV !== "test") return res.status(404).json({ message: "Not found" });
+  try {
+    const result = await pool.query(
+      "SELECT is_verified, verification_token FROM users WHERE email = $1",
+      [normalizedEmail(req.body.email)]
+    );
+    if (!result.rows.length) return res.status(404).json({ message: "User not found." });
+    return res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Test user state error:", err.message);
+    return res.status(500).json({ message: "Unable to retrieve test user state." });
   }
 };

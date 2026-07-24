@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { API_URL } from "../config/api";
 
 function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -7,7 +8,7 @@ function VerifyEmail() {
   useEffect(() => {
     const token = searchParams.get("token");
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-email?token=${token}`)
+    fetch(`${API_URL}/api/auth/verify-email?token=${token}`)
       .then(res => res.json())
       .then(data => {
         console.log(data);

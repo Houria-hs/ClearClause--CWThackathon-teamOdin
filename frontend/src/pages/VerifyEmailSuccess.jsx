@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
-import PremiumButton from "./PremiumBtn";
+import PremiumButton from "../components/PremiumBtn";
 
 export default function VerifyEmailSuccess() {
   const navigate = useNavigate();

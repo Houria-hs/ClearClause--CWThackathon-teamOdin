@@ -1,6 +1,11 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+if (process.env.NODE_ENV === 'test') {
+  module.exports = require('./testDb.js');
+  return;
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
